@@ -1,0 +1,441 @@
+\begin{document}
+	\section{附录}
+\subsection{问题一}
+\subsubsection{数据的预处理：除去95\%以上的人未吃饭的天数}
+\noindent
+clear;clc; \\
+data1 = readtable('E:\textbackslash{}校赛\textbackslash{}数模\textbackslash{}2023年校赛命题\textbackslash{}2023年校赛命题\textbackslash{}C题\textbackslash{}附件1第一年三餐消费数据.xlsx','ReadVariableNames',true); \\
+\% data2 = readtable('E:\textbackslash{}校赛\textbackslash{}数模\textbackslash{}2023年校赛命题\textbackslash{}2023年校赛命题\textbackslash{}C题\textbackslash{}附件2 第二年三餐消费数据.xlsx','ReadVariableNames',true);\\
+\% data3 = readtable('E:\textbackslash{}校赛\textbackslash{}数模\textbackslash{}2023年校赛命题\textbackslash{}2023年校赛命题\textbackslash{}C题\textbackslash{}附件3 第三年三餐消费数据.xlsx','ReadVariableNames',true);\\
+\\
+\% data2(:,1) = [{ }]; \\
+\% data3(:,1) = [{ }]; \\
+\% data = horzcat(data1,data2,data3); \\
+data = table2cell(data1); \\
+\% 假设 data 是一个 5415x1098 的数组，保存了所有的数据 \\
+studentNum = 5415;\quad \% 学生数量 \\
+dayNum = 366; \quad \% 天数数量 \\
+\\
+\% 初始化一个空的逻辑向量来保存需要删除的列的索引 \\
+deleteColumns = false(1, dayNum * 3 + 1); \\
+\\
+\% 遍历每一天 \\
+for i = 2:3:(dayNum * 3) + 1 \\
+\% 计算每一天三餐消费总额为0的学生数量 \\
+zeroNum = 0; \\ 
+for j = 1:5415 \\
+if data{j,i} + data{j,i+1} + data{j,i+2} == 0 \\
+zeroNum = zeroNum + 1; \\
+end\\
+end\\
+\\
+\% 如果三餐消费总额为0的学生数量超过总学生数量的95\%，标记这一天的数据列需要被删除 \\
+if zeroNum / studentNum > 0.95 \\
+deleteColumns(i:i+2) = true; \\
+end \\
+end \\
+\\
+\% 删除需要被删除的列 \\
+data(:, deleteColumns) = [{ }]; \\
+\\
+\% 计算并显示已删除的列 \\
+year = find(deleteColumns(2:1099)); \\
+\\
+\% fid = fopen('E:\textbackslash{}校赛\textbackslash{}数模\textbackslash{}数据处理\textbackslash{}不合理天数.txt','w'); \\
+\% fprintf(fid,'第一年删除天数：\%d\textbackslash{}n',length(year)/3); \\
+\% fprintf(fid,'第二年删除天数：\%d\textbackslash{}n',length(year)/3); \\
+\% fprintf(fid,'第三年删除天数：\%d\textbackslash{}n',length(year)/3); \\
+deletedColumns = find(deleteColumns); \\
+disp('Deleted columns: '); \\
+disp(deletedColumns); \\
+xlswrite('E:\textbackslash{}校赛\textbackslash{}数模\textbackslash{}数据处理\textbackslash{}附件1 第一年食堂消费 删除不合理天数.xlsx', data) \\
+\%xlswrite('E:\textbackslash{}校赛\textbackslash{}数模\textbackslash{}数据处理\textbackslash{}附件1 第二年食堂消费 删除不合理天数.xlsx', data) \\
+\%xlswrite('E:\textbackslash{}校赛\textbackslash{}数模\textbackslash{}数据处理\textbackslash{}附件1 第三年食堂消费 删除不合理天数.xlsx', data)
+\subsubsection{决策树的MATLAB代码}
+\noindent
+\%  清空环境变量 \\
+warning off             \% 关闭报警信息 \\
+close all               \% 关闭开启的图窗 \\
+clear                   \% 清空变量 \\
+clc                     \% 清空命令行 \\
+\\
+\%  导入数据 \\
+res = xlsread('C:\textbackslash{}Users\textbackslash{}17519\textbackslash{}Desktop\textbackslash{}2023\text{年校赛真题}\textbackslash{}\text{第一问}\textbackslash{}\text{问题一} \text{最后数据 - 副本}.xlsx'); \\
+\\
+\%  划分训练集和测试集 \\
+temp = randperm(5404); \\
+\\
+P\_train = res(temp(1: 3602), 1: 10)'; \\
+T\_train = res(temp(1: 3602), 20)'; \\
+M = size(P\_train, 2); \\
+\\
+P\_test = res(temp(3603: end), 1: 10)'; \\
+T\_test = res(temp(3603: end), 20)'; \\
+N = size(P\_test, 2); \\
+\\
+\%  数据归一化 \\
+$[p\_train, ps\_input ]$ = mapminmax(P\_train, 0, 1); \\
+p\_test = mapminmax('apply', P\_test, ps\_input ); \\
+t\_train = T\_train; \\
+t\_test  = T\_test ; \\
+\\
+\%  转置以适应模型 \\
+p\_train = p\_train'; p\_test = p\_test'; \\
+t\_train = t\_train'; t\_test = t\_test'; \\
+\\
+\%  训练模型 \\
+trees = 100;                                       \% 决策树数目 \\
+leaf  = 1;                                        \% 最小叶子数  \\
+OOBPrediction = 'on';                             \% 打开误差图  \\
+OOBPredictorImportance = 'on';                    \% 计算特征重要性 \\
+Method = 'classification';                        \% 分类还是回归 \\
+net = TreeBagger(trees, p\_train, t\_train, 'OOBPredictorImportance', OOBPredictorImportance, ... \\
+'Method', Method, 'OOBPrediction', OOBPrediction, 'minleaf', leaf); \\
+importance = net.OOBPermutedPredictorDeltaError;  \% 重要性 \\
+\\
+\%  仿真测试 \\
+t\_sim1 = predict(net, p\_train); \\
+t\_sim2 = predict(net, p\_test ); \\
+\\
+\%  格式转换 \\
+T\_sim1 = str2double(t\_sim1); \\
+T\_sim2 = str2double(t\_sim2); \\
+\\
+\%  性能评价 \\
+error1 = sum((T\_sim1' == T\_train)) / M * 100 ; \\
+error2 = sum((T\_sim2' == T\_test )) / N * 100 ; \\
+\\
+\%  绘制误差曲线 \\
+figure \\
+plot(1: trees, oobError(net), 'b-', 'LineWidth', 1) \\
+legend('误差曲线') \\
+xlabel('决策树数目') \\
+ylabel('误差') \\
+xlim([1, trees]) \\
+grid \\
+\\
+\%  绘制特征重要性
+figure \\
+bar(importance) \\
+legend('重要性') \\
+xlabel('特征') \\
+ylabel('重要性') \\
+\\
+\%  数据排序 \\
+$[ T\_train, index\_1 ]$ = sort(T\_train); \\
+$[ T\_test , index\_2 ]$ = sort(T\_test ); \\
+\\
+T\_sim1 = T\_sim1(index\_1); \\
+T\_sim2 = T\_sim2(index\_2); \\
+\\
+\%  绘图 \\
+figure \\
+plot(1: M, T\_train, 'r\-\*', 1: M, T\_sim1, 'b-o', 'LineWidth', 1) \\
+legend('真实值', '预测值') \\
+xlabel('预测样本') \\
+ylabel('预测结果') \\
+string = {'训练集预测结果对比'; ['准确率=' num2str(error1) '\%']}; \\
+title(string) \\
+grid \\
+\\
+figure \\
+plot(1: N, T\_test, 'r-*', 1: N, T\_sim2, 'b-o', 'LineWidth', 1) \\
+legend('真实值', '预测值')\\
+xlabel('预测样本')\\
+ylabel('预测结果')\\
+string = {'测试集预测结果对比'; ['准确率=' num2str(error2) '\%']};\\
+title(string)\\
+grid\\
+\\
+\%  混淆矩阵 \\
+figure\\
+cm = confusionchart(T\_train, T\_sim1);\\
+cm.Title = 'Confusion Matrix for Train Data';\\
+cm.ColumnSummary = 'column-normalized';\\
+cm.RowSummary = 'row-normalized';\\
+\\
+figure\\
+cm = confusionchart(T\_test, T\_sim2);\\
+cm.Title = 'Confusion Matrix for Test Data';\\
+cm.ColumnSummary = 'column-normalized';\\
+cm.RowSummary = 'row-normalized';\\
+\subsection{问题二}
+\noindent
+\% 清空环境变量 \\
+clear          \quad   \% 清空变量 \\
+clc            \quad    \% 清空命令行 \\
+
+\%  导入数据 \\
+res = xlsread('E:\textbackslash{}校赛\textbackslash{}数模\textbackslash{}数据处理\textbackslash{}第二题训练集.xlsx'); \\
+tosolve = xlsread('E:\textbackslash{}校赛\textbackslash{}数模\textbackslash{}数据处理\textbackslash{}求解集.xlsx'); \\
+\\
+\%  划分训练集和测试集 \\
+temp = randperm(4406); \\
+order0 = [{ }]; \\
+order1 = [{ }]; \\
+order2 = [{ }]; \\
+\\
+P\_train = res(temp(1:3304), 3: 12)';\\
+T\_train = res(temp(1:3304), 2)';\\
+\\
+M = size(P\_train, 2); \\
+\\
+P\_test = res(temp(3305:4406), 3: 12)'; \\
+T\_test = res(temp(3305:4406), 2)'; \\
+\\
+N = size(P\_test, 2);\\
+\%  数据归一化 \\
+$[p\_train, ps\_input]$ = mapminmax(P\_train, 0, 1); \\
+p\_test = mapminmax('apply', P\_test, ps\_input ); \\
+t\_train = T\_train; \\
+t\_test  = T\_test ; \\
+\\
+\%  转置以适应模型 \\
+p\_train = p\_train'; \\
+p\_test = p\_test'; \\
+t\_train = t\_train'; \\
+t\_test = t\_test'; \\
+\\
+\%  训练模型 \\
+trees = 50;  \quad                              \% 决策树数目 \\
+leaf  = 1;        \quad                        \% 最小叶子数 \\
+OOBPrediction = 'on';                       \quad      \% 打开误差图 \\
+OOBPredictorImportance = 'on';                  \quad  \% 计算特征重要性 \\
+Method = 'classification';                       \quad \% 分类还是回归 \\
+net = TreeBagger(trees, p\_train, t\_train, 'OOBPredictorImportance', OOBPredictorImportance, ...
+'Method', Method, 'OOBPrediction', OOBPrediction, 'minleaf', leaf); \\
+importance = net.OOBPermutedPredictorDeltaError; {  } \% 重要性 \\
+\\
+\%  仿真测试 \\
+t\_sim1 = predict(net, p\_train); \\
+t\_sim2 = predict(net, p\_test ); \\
+\\
+\%  格式转换 \\
+T\_sim1 = str2double(t\_sim1); \\
+T\_sim2 = str2double(t\_sim2); \\
+\\
+\%  性能评价 \\
+error1 = sum((T\_sim1' == T\_train)) / M * 100 ; \\
+error2 = sum((T\_sim2' == T\_test )) / N * 100 ; \\
+\%  绘制误差曲线 \\
+figure \\
+plot(1: trees, oobError(net), 'b-', 'LineWidth', 1) \\
+legend('误差曲线') \\
+xlabel('决策树数目') \\
+ylabel('误差') \\
+xlim([1, trees]) \\
+grid \\
+\\
+\%  绘制特征重要性 \\
+figure \\
+bar(importance) \\
+legend('重要性') \\
+xlabel('特征') \\
+ylabel('重要性') \\
+\\
+\%  数据排序 \\
+$[T\_train, index\_1]$ = sort(T\_train);\\
+$[T\_test , index\_2]$ = sort(T\_test );\\
+\\
+T\_sim1 = T\_sim1(index\_1);\\
+T\_sim2 = T\_sim2(index\_2);\\
+\\
+\%  绘图\\
+\\
+figure \\
+plot(1: N, T\_test, 'r*', 1: N, T\_sim2, 'bo', 'LineWidth', 1) \\
+legend('真实值', '预测值') \\
+xlabel('预测样本') \\
+ylabel('预测结果') \\
+string = {'测试集预测结果对比'; ['准确率=' num2str(error2) '\%']}; \\
+title(string) \\
+grid \\
+\\
+\%  混淆矩阵 \\
+\\
+figure \\
+cm = confusionchart(T\_test, T\_sim2);\\
+cm.Title = 'Confusion Matrix for Test Data'; \\
+cm.ColumnSummary = 'column-normalized'; \\
+cm.RowSummary = 'row-normalized'; \\
+\%  结果输出 \\
+$[ansLabel, score]$ = predict(net, tosolve(:,2:11)); \\
+ansLabel = cell2mat(ansLabel); \\
+ansLabel = str2num(ansLabel); \\
+xls = horzcat(tosolve(:,1),ansLabel); \\
+xlswrite('E:\textbackslash{}校赛\textbackslash{}数模\textbackslash{}数据处理\textbackslash{}第二题预测.xlsx',xls); \\
+data = xlsread('E:\textbackslash{}校赛\textbackslash{}数模\textbackslash{}数据处理\textbackslash{}第二年.xlsx'); \\
+$[ansLab, fen]$ = predict(net, data(:,2:11)); \\
+ansLab = cell2mat(ansLab); \\
+ansLab = str2num(ansLab); \\
+xls = horzcat(data(:,1),ansLab); \\
+xlswrite('E:\textbackslash{}校赛\textbackslash{}数模\textbackslash{}数据处理\textbackslash{}第二年预测.xlsx',xls); \\
+data = xlsread('E:\textbackslash{}校赛\textbackslash{}数模\textbackslash{}数据处理\textbackslash{}第三年.xlsx'); \\
+$[ansLab, fen]$ = predict(net, data(:,2:11)); \\
+ansLab = cell2mat(ansLab); \\
+ansLab = str2num(ansLab); \\
+xls = horzcat(data(:,1),ansLab); \\
+xlswrite('E:\textbackslash{}校赛\textbackslash{}数模\textbackslash{}数据处理\textbackslash{}第三年预测.xlsx',xls);
+\subsection{问题三}
+\noindent
+\%  清空环境变量 \\
+clear             \quad      \% 清空变量 \\
+clc               \quad      \% 清空命令行 \\
+\\
+\%  导入数据 \\
+res = xlsread('E:\textbackslash{}校赛\textbackslash{}数模\textbackslash{}数据处理\textbackslash{}第二题训练集.xlsx'); \\
+tosolve = xlsread('E:\textbackslash{}校赛\textbackslash{}数模\textbackslash{}数据处理\textbackslash{}求解集.xlsx'); \\
+\\
+\%  划分训练集和测试集 \\
+temp = randperm(4406);\\
+order0 = [{ }];\\
+order1 = [{ }]; \\
+order2 = [{ }]; \\
+\\
+P\_train = res(temp(1:3304), 3: 12)'; \\
+T\_train = res(temp(1:3304), 2)'; \\
+\\
+M = size(P\_train, 2); \\
+\\
+P\_test = res(temp(3305:4406), 3: 12)'; \\
+T\_test = res(temp(3305:4406), 2)'; \\
+\\
+N = size(P\_test, 2); \\
+\%  数据归一化 \\
+$[p\_train, ps\_input]$ = mapminmax(P\_train, 0, 1); \\
+p\_test = mapminmax('apply', P\_test, ps\_input ); \\
+t\_train = T\_train; \\
+t\_test  = T\_test ; \\
+\\
+\%  转置以适应模型 \\
+p\_train = p\_train'; \\ 
+p\_test = p\_test'; \\
+t\_train = t\_train'; \\
+t\_test = t\_test'; \\
+\\
+\%  训练模型 \\
+trees = 50;   \quad             \% 决策树数目 \\
+leaf  = 1;       \quad         \% 最小叶子数 \\
+OOBPrediction = 'on';     \quad   \% 打开误差图 \\
+OOBPredictorImportance = 'on';     \quad  \% 计算特征重要性 \\
+Method = 'classification';            \quad    \% 分类还是回归 \\
+net = TreeBagger(trees, p\_train, t\_train, 'OOBPredictorImportance', OOBPredictorImportance, ...
+'Method', Method, 'OOBPrediction', OOBPrediction, 'minleaf', leaf);\\
+importance = net.OOBPermutedPredictorDeltaError; \quad \% 重要性 \\
+\\
+\%  仿真测试 \\
+t\_sim1 = predict(net, p\_train); \\
+t\_sim2 = predict(net, p\_test ); \\
+\\
+\%  格式转换 \\
+T\_sim1 = str2double(t\_sim1); \\
+T\_sim2 = str2double(t\_sim2); \\
+\\
+\%  性能评价 \\
+error1 = sum((T\_sim1' == T\_train)) / M * 100 ; \\
+error2 = sum((T\_sim2' == T\_test )) / N * 100 ; \\
+\%  绘制误差曲线 \\
+figure \\
+plot(1: trees, oobError(net), 'b-', 'LineWidth', 1) \\
+legend('误差曲线') \\
+xlabel('决策树数目') \\
+ylabel('误差') \\
+xlim([1, trees]) \\
+grid \\
+\\
+\%  绘制特征重要性 \\
+figure\\
+bar(importance)\\
+legend('重要性') \\
+xlabel('特征') \\
+ylabel('重要性') \\
+\\
+\%  数据排序 \\
+$[T\_train, index\_1]$ = sort(T\_train); \\
+$[T\_test , index\_2]$ = sort(T\_test ); \\
+\\
+T\_sim1 = T\_sim1(index\_1); \\
+T\_sim2 = T\_sim2(index\_2); \\
+\\
+\%  绘图 \\
+\\
+figure\\
+plot(1: N, T\_test, 'r*', 1: N, T\_sim2, 'bo', 'LineWidth', 1) \\
+legend('真实值', '预测值') \\
+xlabel('预测样本') \\
+ylabel('预测结果') \\
+string = {'测试集预测结果对比'; ['准确率=' num2str(error2) '\%']}; \\
+title(string) \\
+grid \\
+\\
+\%  混淆矩阵 \\
+\\
+figure \\
+cm = confusionchart(T\_test, T\_sim2); \\
+cm.Title = 'Confusion Matrix for Test Data'; \\
+cm.ColumnSummary = 'column-normalized'; \\
+cm.RowSummary = 'row-normalized'; \\
+\%  结果输出 \\
+$[ansLabel, score]$ = predict(net, tosolve(:,2:11)); \\
+ansLabel = cell2mat(ansLabel); \\
+ansLabel = str2num(ansLabel); \\
+xls = horzcat(tosolve(:,1),ansLabel); \\
+xlswrite('E:\textbackslash{}校赛\textbackslash{}数模\textbackslash{}数据处理\textbackslash{}第二题预测.xlsx',xls); \\
+data = xlsread('E:\textbackslash{}校赛\textbackslash{}数模\textbackslash{}数据处理\textbackslash{}第二年.xlsx'); \\
+$[ansLab, fen]$ = predict(net, data(:,2:11)); \\
+ansLab = cell2mat(ansLab); \\
+ansLab = str2num(ansLab); \\
+xls = horzcat(data(:,1),ansLab); \\
+xlswrite('E:\textbackslash{}校赛\textbackslash{}数模\textbackslash{}数据处理\textbackslash{}第二年预测.xlsx',xls); \\
+data = xlsread('E:\textbackslash{}校赛\textbackslash{}数模\textbackslash{}数据处理\textbackslash{}第三年.xlsx'); \\
+$[ansLab, fen]$ = predict(net, data(:,2:11)); \\
+ansLab = cell2mat(ansLab); \\
+ansLab = str2num(ansLab); \\
+xls = horzcat(data(:,1),ansLab); \\
+xlswrite('E:\textbackslash{}校赛\textbackslash{}数模\textbackslash{}数据处理\textbackslash{}第三年预测.xlsx',xls); 
+\subsection{问题四TOPSIS法的MATLAB代码}
+\noindent
+\%导入矩阵，记作Y（使用原数据，不是标准化数据，只使用9列）\\
+$[n,m]$ = size(Y)\\
+\\
+\%加入赋权向量 \\
+\%1: 20.2596(因为在区间内都合理，所以不计入加权) \\
+\%2: 0.786873\\
+\%3: 0.642723\\
+\%4: 0.639639\\
+\%5: 0.854186\\
+\%6: 4.73251\\
+\%7: 0.799405 \\
+\%8: 0.933516\\
+\%9: 0.81919 \\
+\%10: 0.91923\\
+\\
+W=diag($[0.786873,0.642723,0.639639,0.854186,4.73251,0.799405,0.933516,0.81919,0.91923]$); \\
+X=Y*W;\\
+\\
+\%正向化（由于是正数，第1,2,3,4,9每列最大值减去每一个值）\\
+X(:,1) = max(X(:,1))-X(:,1);\\
+X(:,2) = max(X(:,2))-X(:,2);\\
+X(:,3) = max(X(:,3))-X(:,3);\\
+X(:,4) = max(X(:,4))-X(:,4);\\
+X(:,9) = max(X(:,9))-X(:,9);\\
+\\
+disp($[\text{'共有'} num2str(n) \text{'个评价对象, '} num2str(m) \text{'个评价指标'}]$) \\ 
+\\
+\%得到标准化矩阵Z \\
+Z = X ./ repmat(sum(X.*X) .\^{ }0.5, n, 1); \\
+disp('标准化矩阵 Z = ') \\
+disp(Z) \\
+\\
+\%计算距离 \\
+D\_P = sum([(Z - repmat(max(Z),n,1)) .\^{ } 2 ],2) .\^{ } 0.5; \quad  \% D+ 与最大值的距离向量 \\
+D\_N = sum([(Z - repmat(min(Z),n,1)) .\^{ } 2 ],2) .\^{ } 0.5;  \quad \% D- 与最小值的距离向量 \\
+S = D\_N ./ (D\_P+D\_N);    \% 未归一化的得分 \\
+disp('最后的得分为：') \\
+stand\_S = S / sum(S) \%归一化后的得分 \\
+\%[sorted\_S,index] = sort(stand\_S ,'descend') \\
+\\
+\%导入Excel中 \\
+xlswrite('C:\textbackslash{}Users\textbackslash{}17519\textbackslash{}Desktop\textbackslash{}2023\text{年校赛命题}\textbackslash{}\text{数据处理}\textbackslash{}\text{附件1-3合并 删除不合理天数不合理人员 - 副本}.xlsx',stand\_S,1,'AN2');\\
+\%在Excel中排序
+\end{document}
