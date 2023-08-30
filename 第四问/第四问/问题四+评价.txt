@@ -1,0 +1,150 @@
+\begin{document}
+	\section{问题四{ }基于特征重要性结合TOPSIS法的贫困程度综合评价模型}
+		\subsection{TOPSIS法的方法原理}
+		设多属性评价对象集为 $D=\{d_1,d_2,\dots,d_m\}$,衡量对象优劣的属性变量为 $x_1,x_2,\dots,x_n$ ,这时对象集 $D$ 中的每个评价对象$d_i(i=1,2,\dots,m)$的 $n$ 个属性值构成的向量是$ [ a_{i1},a_{i2},\dots,a_{in} ]$,它作为 $n$ 维空间中的一个点,能唯一地表征评价对象 $d_i$。\par
+		正理想解 $C^*$ 是一个对象集 $D$ 中并不存在的虚拟的最佳对象,它的每个属性值都是决策矩阵中该属性的最优值;而负理想解 $C^0$ 则是虚拟的最差对象,它的每个属性值都是决策矩阵中该属性的最差值。在 $n$ 维空间中,将对象集 $D$ 中的各评价对象 $d_i$ 与正理想解 $C^*$ 和负理想解 $C^0$ 的距离进行比较,既靠近正理想解又远离负理想解的对象就是对象集 $D$ 中的最优对象;并可以据此排定对象集 $D$ 中各评价对象的优先次序。\par
+		TOPSIS法所用的是欧几里得距离。有时会出现某两个评价对象与正理想解的距离相同的情况,为了区分这两个对象的优劣,引入负理想解并计算这两个对象与负理想解的距离,与正理想解的距离相同的对象离负理想解远者为优。\par
+		下面我们来介绍算法过程:
+			\subsubsection{正向化处理}
+				首先，在处理数据时，有些指标的数据越大越好，有些则是越小越好，有些又是中间某个值或者某段区间最好。我们可以对其进行“正向化处理”，使指标都越大越好。
+				\paragraph{对于极小型指标的正向化处理}
+					对于任何情况，我们可以使用
+					\begin{equation*}
+						x_i ' =max-x_i
+					\end{equation*}
+					来实现正向化。特别地，如果元素全是正数，还可以采用
+					\begin{equation*}
+						x_i ' =\frac{1}{x_i}
+					\end{equation*}
+					来实现正向化的目的
+				\paragraph{对于中间型指标的正向化处理}
+					假设其最佳数值是$x_{best}$，我们可以取
+					\begin{equation*}
+						M={\left | x_i - x_{best} \right |}, 
+					\end{equation*}
+					再取
+					\begin{equation*}
+						x_i ' = 1 - \frac{x_i - x_{best}}{M}
+					\end{equation*}
+					也能实现正向化处理
+				\paragraph{对于区间型指标的正向化处理}
+					如果一个区间型指标，其最佳区间是$[a,b]$，我们取 $M = max{a-min{x_i},max(x_i)-b}$，之后再按照
+					\begin{equation*}
+						x_i ' = 
+						\begin{cases}
+							1-\frac{a - x_i}{M}, \quad x_i<a \\
+							1, \quad \quad \quad a< x_i < b \\
+							1 - \frac{x_i - b}{M}, \quad x_i > b
+						\end{cases}
+					\end{equation*}
+			\subsubsection{标准化处理}
+				使用向量规划化方法求得规范决策矩阵。设多属性决策问题的决策矩阵 $A=(a_{ij})_{m\times n}$,规范化决策矩阵 $B = (b_{ij})_{m \times n}$,其中
+				\begin{equation*}
+					b_{ij}=\frac{a_{ij}}{\sqrt{\sum_{i=1}^{m}a_{ij}^2}},i=1,2,\dots,m;j=1,2,\dots,n.
+				\end{equation*}
+			\subsubsection{构造规范矩阵}
+				构造加权规范阵 $C=(c_{ij})_{m \times n}$。设由决策人给定各属性的权重向量为 $w=[w_1,w_2,\dots,w_n]^T$,则
+				\begin{equation*}
+					c_{ij}=w_{ij} \cdot b_{ij},i=1,2,\dots,m;j=1,2,\dots,n.
+				\end{equation*}
+			\subsubsection{确定正理想解与负理想解}
+				设正理想解 $C^*$ 的第$j$个属性值为 $c_{j}^*$, 负理想解 $C^0$ 第$j$个属性值为 $c_{j}^0$, 则
+				\begin{equation*}
+					\text{正理想解}:c_{j}^*=
+					\begin{cases}
+						\underset{i}{max}c_{ij},j\text{是效益型属性},\\
+						\underset{i}{min}c_{ij},j\text{是成本型属性},
+					\end{cases}
+					j=1,2,\dots,n,
+				\end{equation*}
+				\begin{equation*}
+					\text{负理想解}:c_{j}^0=
+					\begin{cases}
+						\underset{i}{min}c_{ij},j\text{是效益型属性},\\
+						\underset{i}{max}c_{ij},j\text{是成本型属性},
+					\end{cases}
+					j=1,2,\dots,n,
+				\end{equation*}
+			\subsubsection{计算欧氏距离}
+				评价对象 $d_i$到正理想解的距离 $s_i^*$ 为
+				\begin{equation*}
+					s_i^*=\sqrt{\sum_{j=1}^{n}(c_{ij}-c_j^*)^2},i=1,2,\dots,m;
+				\end{equation*} \par
+				评价对象 $d_i$到负理想解的距离 $s_i^0$ 为
+				\begin{equation*}
+					s_i^0=\sqrt{\sum_{j=1}^{n}(c_{ij}-c_j^0)^2},i=1,2,\dots,m.
+				\end{equation*}
+			\subsubsection{排序}
+				设评价对象 $d_i$ 的综合评价指数为 $f_i$,
+				\begin{equation*}
+					f_i=\dfrac{s_i^0}{s_i^0 + s_i^*},i=1,2,\dots,m.
+				\end{equation*}
+				然后将 $f_i$从大到小排列即可得到各评价对象的优劣次序 \\
+		以上就是TOPSIS法的基本理论和步骤。这种方法的优点是，它不仅考虑到了各项
+		指标的主观权重，而且还考虑到了各项指标的客观权重，从而得出了较为科学、
+		公正、客观的评价结果。
+		\subsection{TOPSIS法结合特征重要性参数对学生进行贫困程度打分}
+			由上述对TOPSIS法的介绍可知，我们采用问题一得到的赋权向量对经过正向化、标准化的数据矩阵进行处理。注意，该过程抛弃掉了性别变量对于评分的影响，因为性别变量无论是0还是1，均属于正常值，不应参与正理想解与负理想解的计算中。于是我们采用了除去这一特征变量的另九个特征按重要性得分对矩阵进行赋权，得到规范矩阵。
+		\subsection{利用线性函数对排出的80位同学进行资助}
+			此分配方法的基本精神是：依据贫困程度评分高低来进行线性的金额分配，对于此线性函数的求解，使用待定系数法。 \par
+			首先，为保证这些同学都能得到一定的补助，我们设定补助下界，即第八十名分到500元。而后可列出二元一次方程组
+			\begin{equation*}
+				\begin{cases}
+					0.0296572488441 \times k + 80 \times b = 100000 \\
+					0.000337 \times k + b = 500
+				\end{cases}
+			\end{equation*}
+			其中k是线性函数的斜率，b为其纵截距，0.0296572488为前八十位同学贫困评分归一化后数据之和，0.000337是第八十位同学贫困评分归一化后所得分数 \\
+			\begin{center}
+				\begin{table}[]
+					\begin{tabular}{lllllllllllllll}
+						\cline{1-8}
+						\multicolumn{1}{|c|}{序号}                   & \multicolumn{2}{c|}{\begin{tabular}[c]{@{}c@{}}贫困程度评价\\ （经上一步归一化后的得分）\end{tabular}} & \multicolumn{3}{c|}{排名}                   & \multicolumn{2}{l|}{资助金额}                 &  &  &  &  &  &  &  \\ \cline{1-8}
+						\multicolumn{1}{|c|}{1597}                 & \multicolumn{2}{c|}{0.000454605}                                                   & \multicolumn{3}{c|}{1}                    & \multicolumn{2}{c|}{3116.10}               &  &  &  &  &  &  &  \\ \cline{1-8}
+						\multicolumn{1}{|l|}{2914}                 & \multicolumn{2}{c|}{0.000439928}                                                   & \multicolumn{3}{c|}{2}                    & \multicolumn{2}{c|}{2789.62}              &  &  &  &  &  &  &  \\ \cline{1-8}
+						\multicolumn{1}{|l|}{921}                  & \multicolumn{2}{c|}{0.00042967}                                                    & \multicolumn{3}{c|}{3}                    & \multicolumn{2}{c|}{2561.44}               &  &  &  &  &  &  &  \\ \cline{1-8}
+						\multicolumn{1}{|c|}{\dots} & \multicolumn{2}{c|}{\dots}                                          & \multicolumn{3}{c|}{\dots} & \multicolumn{2}{c|}{\dots} &  &  &  &  &  &  &  \\ \cline{1-8}
+						\multicolumn{1}{|l|}{4125}                 & \multicolumn{2}{c|}{0.00033727}                                                    & \multicolumn{3}{c|}{79}                   & \multicolumn{2}{c|}{506.00}                &  &  &  &  &  &  &  \\ \cline{1-8}
+						\multicolumn{1}{|l|}{4114}                 & \multicolumn{2}{c|}{0.000337053}                                                   & \multicolumn{3}{c|}{80}                   & \multicolumn{2}{c|}{501.18}                &  &  &  &  &  &  &  \\ \cline{1-8}
+						& \multicolumn{2}{l}{}                                                               & \multicolumn{3}{l}{}                      &                      &                    &  &  &  &  &  &  &  \\
+						& \multicolumn{2}{l}{}                                                               & \multicolumn{3}{l}{}                      &                      &                    &  &  &  &  &  &  &  \\
+						& \multicolumn{2}{l}{}                                                               & \multicolumn{3}{l}{}                      &                      &                    &  &  &  &  &  &  &  \\
+						&                                          &                                         &              &              &             &                      &                    &  &  &  &  &  &  &  \\
+						&                                          &                                         &              &              &             &                      &                    &  &  &  &  &  &  &  \\
+						&                                          &                                         &              &              &             &                      &                    &  &  &  &  &  &  &  \\
+						&                                          &                                         &              &              &             &                      &                    &  &  &  &  &  &  &  \\
+						&                                          &                                         &              &              &             &                      &                    &  &  &  &  &  &  & 
+					\end{tabular}
+				\end{table}
+			\end{center}
+			该贫困程度评分对资助金额的函数为
+			\begin{equation*}
+				y = 22244888.6020 \times x - 6996.5275
+			\end{equation*}
+			其中x是贫困程度评分，y是资助金额 \\
+			最终资助前八十位的总金额共计99999.99，于是这是一个合理的方案。
+	\section{模型的评价与改进}
+		\subsection{模型的优缺点}
+			\subsubsection{优点}
+				\begin{itemize}
+					\item 在问题一中使用的K-means算法的时间复杂度相对较低，计算效率高，适用于附件0、1、2、3这种大规模数据集；而且它可扩展性强，可以通过各种改进和优化应用于不同类型的数据和问题。
+					\item 在问题一中利用系统聚类分析结合肘部法则验证了选择k=3进行K-means对样本进行分类的合理性与正确性
+					\item 问题一中使用的决策树算法，时间复杂度较小，为用于训练决策树的数据点的对数，对缺失值不敏感，可以处理不相关特征数据
+					\item 问题二和三中使用的随机森林算法，表现性能好，与其他算法相比有着很大优势；能处理很高维度的数据（也就是很多特征的数据），并且不用做特征选择；在训练完之后，随机森林能给出哪些特征比较重要；训练速度快，容易做成并行化方法(训练时，树与树之间是相互独立的)。
+					\item 问题四中按照贫困各特征的重要性数据加权后的得分线性分配资助金额，这样可以确保资助金额的分配是基于学生的贫困程度评分来完成的
+				\end{itemize}
+			\subsubsection{缺点}
+				\begin{itemize}
+					\item 由于附件4-7中仅涉及了300为同学的饮食种类，统计其他同学时都没有提到此指标，使得模型样本固定，难以继续通过训练优化模型
+					\item 附件8中学生样本也偏少，尤其是指标2，这会导致模型训练后精准度不高而产生误差
+					\item 附件中的有效信息来源主要是食堂，虽然学生的食堂消费数据能够在很大程度上反映学生的贫困程度，但是仍然不能全面的反映，应该再增加一些反映学生消费力整体性的信息。例如，学生饮食支出在其日常开销中占比，所用电子产品的数量及价格，日常穿戴衣物饰品价格等等。
+				\end{itemize}
+		\subsection{模型的改进}	
+			\begin{itemize}
+				\item 拓展有效数据来源。当前模型主要基于学生食堂消费数据，最后的分析结果难免会存在片面的情况，未来再次分析时，可以考虑引入学生饮食支出在其日常开销中占比，所用电子产品的数量及价格，日常穿戴衣物饰品价格等数据，并以此为指导，构建更客观、正确、全面的模型。
+				\item 收集更多精确信息。由于附件8中的样本数据过小，导致形成的随机森林模型准确率和召回率偏低，应当收集更多精确数据保证随机森林模型的精确度。
+				\item 优化资助分配机制。在此模型中，我们主要采用了线性插值的方法来为80位学生分配资助金额，但现实生活中的真实情况可能更加复杂，导致线性插值的方法失灵。对此，我们可以考虑按某些特征重要性次序来引入非线性插值方法进行分配
+				\item 
+				改进优化加权系数。在问题四的评价中，使用权重的数据为问题一中所得到的特征重要性数据，可能会因数据以及统计方法而与真实、科学的情况产生偏差，可以通过专家经验来给出更加系统、更加客观加权系数，以此达到更好的效果
+			\end{itemize}
+\end{document}
